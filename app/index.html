@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Issue Desk</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#1e293b;font:16px/1.5 system-ui,sans-serif}main{max-width:900px;margin:48px auto;padding:0 24px}h1{margin-bottom:4px}h2{font-size:20px}header p{color:#475569;margin-top:0}section{background:white;border:1px solid #dce2e9;border-radius:12px;padding:24px;margin:24px 0}label{display:block;font-weight:600;margin-bottom:6px}input,select,button{font:inherit;padding:10px;border-radius:6px;border:1px solid #94a3b8}input{width:100%}.form-row{display:grid;grid-template-columns:1fr 160px;gap:16px;margin-bottom:16px}button{background:#1d4ed8;color:white;border:0;cursor:pointer}button:disabled{opacity:.6}button.secondary{background:#e2e8f0;color:#1e293b}article{padding:16px 0;border-bottom:1px solid #e2e8f0}article:last-child{border:0}article h3{margin:0 0 8px;overflow-wrap:anywhere}.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.actions label{margin:0;font-weight:400}[role=alert]{color:#b91c1c}#filter{margin-bottom:8px}@media(max-width:600px){main{margin-top:24px}.form-row{grid-template-columns:1fr}}
+</style></head>
+<body><main><header><h1>Issue Desk</h1><p>A small issue tracker for the QA automation portfolio</p></header>
+<section aria-labelledby="new-title"><h2 id="new-title">Report an issue</h2>
+<form id="issue-form" novalidate><div class="form-row"><div><label for="title">Issue title</label><input id="title" maxlength="120" autocomplete="off"></div><div><label for="priority">Priority</label><select id="priority"><option>Medium</option><option>High</option><option>Low</option></select></div></div><button id="create" type="submit">Create issue</button></form>
+<p role="alert" id="error" hidden></p><p role="status" id="notice" aria-live="polite"></p></section>
+<section aria-labelledby="list-title"><h2 id="list-title">Issues</h2><label for="filter">Filter by status</label><select id="filter"><option>All</option><option>Open</option><option>In progress</option><option>Resolved</option></select><div id="issues"></div></section>
+</main><script type="module">
+const workspace = localStorage.getItem('workspace') || crypto.randomUUID();
+localStorage.setItem('workspace', workspace);
+const $ = id => document.getElementById(id);
+let issues = [];
+function error(message='') { $('error').textContent=message; $('error').hidden=!message; }
+async function api(path='', options={}) {
+ const response=await fetch('/api/issues'+path,{...options,headers:{'Content-Type':'application/json','X-Workspace':workspace}});
+ if(!response.ok) throw new Error('Request failed');
+ return response.status===204 ? null : response.json();
+}
+function render() {
+ $('issues').replaceChildren();
+ const visible=issues.filter(i=>$('filter').value==='All'||i.status===$('filter').value);
+ if(!visible.length){$('issues').textContent='No issues found.';return;}
+ for(const issue of visible){
+  const article=document.createElement('article'); article.setAttribute('aria-label',issue.title);
+  const title=document.createElement('h3');title.textContent=issue.title;
+  const priority=document.createElement('p');priority.textContent='Priority: '+issue.priority;
+  const actions=document.createElement('div');actions.className='actions';
+  const label=document.createElement('label');label.textContent='Status';label.htmlFor='status-'+issue.id;
+  const select=document.createElement('select');select.id=label.htmlFor;
+  for(const status of ['Open','In progress','Resolved']){const option=document.createElement('option');option.textContent=status;select.append(option);}
+  select.value=issue.status;
+  select.addEventListener('change',async()=>{
+   try{const updated=await api('/'+issue.id,{method:'PATCH',body:JSON.stringify({status:select.value})});Object.assign(issue,updated);error();$('notice').textContent='Status updated.';render();}
+   catch{select.value=issue.status;error('Could not update issue. Please try again.');}
+  });
+  const remove=document.createElement('button');remove.textContent='Delete issue';remove.className='secondary';
+  remove.addEventListener('click',async()=>{try{await api('/'+issue.id,{method:'DELETE'});issues=issues.filter(i=>i.id!==issue.id);error();$('notice').textContent='Issue deleted.';render();}catch{error('Could not delete issue. Please try again.');}});
+  actions.append(label,select,remove);article.append(title,priority,actions);$('issues').append(article);
+ }
+}
+$('filter').addEventListener('change',render);
+$('issue-form').addEventListener('submit',async event=>{
+ event.preventDefault();error();$('notice').textContent='';
+ const title=$('title').value.trim();
+ if(!title){error('Enter an issue title.');$('title').focus();return;}
+ $('create').disabled=true;
+ try{const issue=await api('',{method:'POST',body:JSON.stringify({title,priority:$('priority').value})});issues.push(issue);$('title').value='';$('notice').textContent='Issue created.';render();}
+ catch{error('Could not create issue. Please try again.');}
+ finally{$('create').disabled=false;}
+});
+try{issues=await api();render();}catch{error('Could not load issues. Please refresh.');}
+</script></body></html>
