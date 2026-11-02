@@ -1,5 +1,7 @@
 # Playwright QA Portfolio
 
+[![Playwright checks](https://github.com/RubyKalfa/playwright-qa-portfolio/actions/workflows/playwright.yml/badge.svg)](https://github.com/RubyKalfa/playwright-qa-portfolio/actions/workflows/playwright.yml)
+
 An automation portfolio for a local issue tracker, using **Playwright and TypeScript**. It demonstrates UI workflows, direct REST API checks, boundary and negative testing, browser/API integration, test isolation, and continuous integration.
 
 The application is a purpose-built practice system. This is a personal learning project, not an employer system or evidence of production deployment. No real customer data, credentials, or external demo services are used.
@@ -79,7 +81,7 @@ Once you have run, reviewed, and understood the project, a CV line could be:
 
 > Personal project: Built and maintained a Playwright and TypeScript test suite covering UI and REST API workflows, cross-browser execution, isolated test data, and GitHub Actions reporting.
 
-Only use that wording after you can explain and modify the tests yourself. Add the actual repository URL after publishing; no public repository has been created by this package.
+Only use that wording after you can explain and modify the tests yourself. Repository: https://github.com/RubyKalfa/playwright-qa-portfolio.
 
 ## References
 
