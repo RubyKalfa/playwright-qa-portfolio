@@ -1,6 +1,6 @@
 # Publish to GitHub
 
-No repository or remote has been created yet. You can publish this folder with GitHub Desktop or Git from your own account.
+The project is published at https://github.com/RubyKalfa/playwright-qa-portfolio. The instructions below explain how to publish your own copy or recreate the repository.
 
 ## GitHub Desktop
 
